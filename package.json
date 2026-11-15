@@ -1,0 +1,26 @@
+{
+  "name": "sweety-blood-glucose-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sweety - a blood glucose tracking application for diabetes patients. React + Express + PostgreSQL.",
+  "author": "Sairajlole <sairajlole2004@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "migrate": "npm --prefix server run migrate",
+    "seed": "npm --prefix server run seed",
+    "server": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "test": "npm --prefix server test && npm --prefix client test",
+    "test:server": "npm --prefix server test",
+    "test:client": "npm --prefix client test"
+  },
+  "keywords": [
+    "blood-glucose",
+    "diabetes",
+    "healthcare",
+    "react",
+    "express",
+    "postgresql"
+  ]
+}
