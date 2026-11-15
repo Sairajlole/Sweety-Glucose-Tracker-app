@@ -21,7 +21,7 @@ const MSG = {
  * regex, which rejects decimals ("97.5"), exponents and hex forms that
  * Number() would otherwise happily coerce.
  */
-const glucoseValueRule = body('glucose_value')
+const glucoseValueRule = body('glucoseValue')
   .custom((value) => {
     const isBlank =
       value === undefined ||
@@ -43,7 +43,7 @@ const glucoseValueRule = body('glucose_value')
   .bail()
   .toInt();
 
-const readingDateRule = body('reading_date')
+const readingDateRule = body('readingDate')
   .custom((value) => {
     if (!value) throw new Error(MSG.dateRequired);
     if (!isValidISODate(String(value))) throw new Error(MSG.dateInvalid);
@@ -55,7 +55,7 @@ const readingDateRule = body('reading_date')
     return true;
   });
 
-const timeSlotRule = body('time_slot')
+const timeSlotRule = body('timeSlot')
   .notEmpty()
   .withMessage(MSG.slotRequired)
   .bail()
@@ -75,8 +75,8 @@ const listReadingsRules = [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer.').toInt(),
   query('limit')
     .optional()
-    .isInt({ min: 1, max: 100 })
-    .withMessage('Limit must be between 1 and 100.')
+    .isInt({ min: 1, max: 200 })
+    .withMessage('Limit must be between 1 and 200.')
     .toInt(),
   query('from')
     .optional()
@@ -86,7 +86,7 @@ const listReadingsRules = [
     .optional()
     .custom((v) => isValidISODate(String(v)))
     .withMessage('The "to" date must be in YYYY-MM-DD format.'),
-  query('time_slot')
+  query('timeSlot')
     .optional()
     .isIn(SLOT_VALUES)
     .withMessage('Please select a valid time slot.'),

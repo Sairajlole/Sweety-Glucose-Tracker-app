@@ -60,7 +60,7 @@ async function assertDailyRules({ userId, readingDate, timeSlot, excludeId = nul
   }
 }
 
-async function create(userId, { reading_date: readingDate, time_slot: timeSlot, glucose_value: glucoseValue }) {
+async function create(userId, { readingDate, timeSlot, glucoseValue }) {
   await assertDailyRules({ userId, readingDate, timeSlot });
 
   const result = await db.query(
@@ -137,7 +137,7 @@ async function getById(userId, id) {
   return toReading(row);
 }
 
-async function update(userId, id, { reading_date: readingDate, time_slot: timeSlot, glucose_value: glucoseValue }) {
+async function update(userId, id, { readingDate, timeSlot, glucoseValue }) {
   const existing = await getById(userId, id);
 
   await assertDailyRules({

@@ -16,8 +16,7 @@ async function create(req, res, next) {
 
 async function list(req, res, next) {
   try {
-    const { page, limit, from, to } = req.query;
-    const { time_slot: timeSlot } = req.query;
+    const { page, limit, from, to, timeSlot } = req.query;
 
     const { readings, pagination } = await readingService.list(req.user.id, {
       page: page || 1,

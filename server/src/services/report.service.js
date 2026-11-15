@@ -105,7 +105,7 @@ async function monthToDateReport(userId, date) {
   return {
     type: 'month-to-date',
     date,
-    period: { from, to, label: `1 ${formatMonth(date)} - ${date}` },
+    period: { from, to, label: `${formatMonth(date)} to date` },
     summary,
     hasData: summary.totalReadings > 0,
   };
