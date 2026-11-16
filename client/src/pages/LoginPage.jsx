@@ -6,8 +6,6 @@ import Spinner from '../components/Spinner';
 import { getErrorMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
-const DEMO = { email: 'demo@sweety.app', password: 'SweetyDemo@123' };
-
 export default function LoginPage() {
   const { login, isAuthenticated, initialising } = useAuth();
   const navigate = useNavigate();
@@ -53,12 +51,6 @@ export default function LoginPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const fillDemo = () => {
-    setForm(DEMO);
-    setErrors({});
-    setFormError('');
   };
 
   return (
@@ -109,22 +101,6 @@ export default function LoginPage() {
           {submitting ? 'Logging in...' : 'Log in'}
         </button>
       </form>
-
-      <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Demo account
-        </p>
-        <p className="mt-1.5 text-sm text-slate-600">
-          {DEMO.email} / {DEMO.password}
-        </p>
-        <button
-          type="button"
-          onClick={fillDemo}
-          className="mt-2.5 text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline"
-        >
-          Fill demo credentials
-        </button>
-      </div>
 
       <AuthFooterLink text="New to Sweety?" linkText="Create an account" to="/register" />
     </AuthLayout>

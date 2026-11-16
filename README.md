@@ -540,8 +540,8 @@ Email:    demo@sweety.app
 Password: SweetyDemo@123
 ```
 
-The login screen has a **Fill demo credentials** button. These credentials exist only for local
-demonstration and must never be used in a production deployment.
+These credentials exist only for local demonstration and must never be used in a production
+deployment.
 
 ---
 
