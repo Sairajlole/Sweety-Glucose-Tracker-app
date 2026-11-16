@@ -120,7 +120,7 @@ for a project that must run first time on a reviewer's machine. The hash format 
 ## 4. Project architecture
 
 ```
-sweety-blood-glucose-tracker/
+Sweety-Glucose-Tracker-app/
 ├─ client/                          React application (Vite)
 │  ├─ src/
 │  │  ├─ api/client.js              Axios instance, JWT interceptor, error helpers
@@ -296,8 +296,8 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 Prerequisites: **Node.js 18+** and a running **PostgreSQL 13+**.
 
 ```bash
-git clone https://github.com/Sairajlole/sweety-blood-glucose-tracker.git
-cd sweety-blood-glucose-tracker
+git clone https://github.com/Sairajlole/Sweety-Glucose-Tracker-app.git
+cd Sweety-Glucose-Tracker-app
 
 # install both halves
 npm run install:all
