@@ -8,7 +8,16 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-800 antialiased;
+    @apply bg-slate-50 font-sans text-slate-800 antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Tabular numerals keep glucose values and dates aligned in tables. */
+  .tnum,
+  .table-cell,
+  .stat-value {
+    font-variant-numeric: tabular-nums;
   }
 
   /* Consistent, visible keyboard focus everywhere. */
@@ -52,6 +61,10 @@
 
   .btn-ghost {
     @apply btn text-slate-600 hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .btn-sm {
+    @apply rounded-lg px-3 py-1.5 text-[13px] leading-5;
   }
 
   .input {

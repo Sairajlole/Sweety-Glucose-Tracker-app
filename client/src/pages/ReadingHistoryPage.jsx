@@ -64,10 +64,10 @@ export default function ReadingHistoryPage() {
   const handleSaved = async (values) => {
     if (editing) {
       await readingsApi.update(editing.id, values);
-      toast.success('Reading updated successfully.');
+      toast.success('Reading updated.');
     } else {
       await readingsApi.create(values);
-      toast.success('Reading added successfully.');
+      toast.success('Reading saved — nice steady tracking.');
     }
     setFormOpen(false);
     setEditing(null);
@@ -187,11 +187,11 @@ export default function ReadingHistoryPage() {
               setFormOpen(true);
             }}
             onDelete={setPendingDelete}
-            emptyTitle={hasFilters ? 'No readings in this range' : 'No readings yet'}
+            emptyTitle={hasFilters ? 'Nothing in this date range' : 'No readings yet'}
             emptyDescription={
               hasFilters
-                ? 'Try a wider date range, or add a reading for this period.'
-                : 'Once you record a glucose reading it will show up here.'
+                ? 'Try widening the dates a little — your readings might be just outside this window.'
+                : 'Your readings will live here — add your first one to get started.'
             }
             emptyAction={
               <button type="button" className="btn-primary" onClick={() => setFormOpen(true)}>
@@ -211,7 +211,7 @@ export default function ReadingHistoryPage() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="btn-secondary px-3 py-1.5"
+                className="btn-secondary btn-sm"
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
                 disabled={pagination.page <= 1}
               >
@@ -220,7 +220,7 @@ export default function ReadingHistoryPage() {
               </button>
               <button
                 type="button"
-                className="btn-secondary px-3 py-1.5"
+                className="btn-secondary btn-sm"
                 onClick={() => setPage((current) => Math.min(pagination.totalPages, current + 1))}
                 disabled={pagination.page >= pagination.totalPages}
               >

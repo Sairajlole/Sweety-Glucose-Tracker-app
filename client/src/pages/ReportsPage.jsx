@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 import GlucoseTrendChart from '../components/GlucoseTrendChart';
+import InRangeStrip from '../components/InRangeStrip';
 import PageHeader from '../components/PageHeader';
 import StatCard from '../components/StatCard';
 import { getErrorMessage, readingsApi, reportsApi } from '../api/client';
@@ -213,6 +214,8 @@ export default function ReportsPage() {
           loading={loading}
         />
       </section>
+
+      <InRangeStrip readings={chartReadings} loading={loading || chartLoading} />
 
       {/* Empty state */}
       {!loading && active && !active.hasData ? (

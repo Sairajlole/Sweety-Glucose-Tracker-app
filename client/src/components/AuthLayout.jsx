@@ -68,6 +68,10 @@ export default function AuthLayout({ title, subtitle, children }) {
           {subtitle ? <p className="mt-1.5 text-sm text-slate-500">{subtitle}</p> : null}
 
           <div className="mt-7">{children}</div>
+
+          <p className="mt-8 text-center text-xs text-slate-400">
+            © 2026 Sweety · A tracking tool, not medical advice
+          </p>
         </div>
       </main>
     </div>

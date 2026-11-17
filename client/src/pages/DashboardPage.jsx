@@ -12,11 +12,13 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
+import DailyCompletionBanner from '../components/DailyCompletionBanner';
 import PageHeader from '../components/PageHeader';
 import ReadingFormModal from '../components/ReadingFormModal';
 import ReadingsTable from '../components/ReadingsTable';
 import ConfirmDialog from '../components/ConfirmDialog';
 import StatCard from '../components/StatCard';
+import WeekSparkline from '../components/WeekSparkline';
 import { getErrorMessage, readingsApi, reportsApi } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -31,6 +33,7 @@ export default function DashboardPage() {
   const [daily, setDaily] = useState(null);
   const [monthToDate, setMonthToDate] = useState(null);
   const [recent, setRecent] = useState([]);
+  const [monthReadings, setMonthReadings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
@@ -44,14 +47,17 @@ export default function DashboardPage() {
       setLoading(true);
       setLoadError('');
       try {
-        const [dailyReport, mtdReport, recentData] = await Promise.all([
+        const monthStart = `${date.slice(0, 7)}-01`;
+        const [dailyReport, mtdReport, recentData, monthData] = await Promise.all([
           reportsApi.daily(date),
           reportsApi.monthToDate(date),
           readingsApi.list({ page: 1, limit: 5 }),
+          readingsApi.list({ from: monthStart, to: date, limit: 200 }),
         ]);
         setDaily(dailyReport);
         setMonthToDate(mtdReport);
         setRecent(recentData.readings);
+        setMonthReadings(monthData.readings);
       } catch (error) {
         setLoadError(getErrorMessage(error, 'Could not load your dashboard.'));
       } finally {
@@ -66,7 +72,53 @@ export default function DashboardPage() {
   }, [load, selectedDate]);
 
   const firstName = useMemo(() => (user?.name || '').split(' ')[0] || 'there', [user]);
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
+
   const summary = daily?.summary ?? { highest: null, lowest: null, average: null, totalReadings: 0 };
+
+  // Last-seven-days daily averages for the month-card sparkline, plus the
+  // share of this month's readings inside the 70-180 mg/dL target band.
+  const { weekPoints, inRangePct } = useMemo(() => {
+    const byDay = new Map();
+    for (const reading of monthReadings) {
+      const list = byDay.get(reading.readingDate) || [];
+      list.push(reading.glucoseValue);
+      byDay.set(reading.readingDate, list);
+    }
+
+    const [year, month, day] = selectedDate.split('-').map(Number);
+    const points = [];
+    for (let offset = 6; offset >= 0; offset -= 1) {
+      const d = new Date(year, month - 1, day - offset);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+        d.getDate()
+      ).padStart(2, '0')}`;
+      const values = byDay.get(key);
+      if (values?.length) {
+        points.push({
+          day: key,
+          avg: Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10,
+        });
+      }
+    }
+
+    const inRange =
+      monthReadings.length === 0
+        ? null
+        : Math.round(
+            (monthReadings.filter((r) => r.glucoseValue >= 70 && r.glucoseValue <= 180).length /
+              monthReadings.length) *
+              100
+          );
+
+    return { weekPoints: points, inRangePct: inRange };
+  }, [monthReadings, selectedDate]);
 
   const openAdd = () => {
     setEditing(null);
@@ -81,10 +133,10 @@ export default function DashboardPage() {
   const handleSaved = async (values) => {
     if (editing) {
       await readingsApi.update(editing.id, values);
-      toast.success('Reading updated successfully.');
+      toast.success('Reading updated.');
     } else {
       await readingsApi.create(values);
-      toast.success('Reading added successfully.');
+      toast.success('Reading saved — nice steady tracking.');
     }
 
     setFormOpen(false);
@@ -110,7 +162,7 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={`Welcome back, ${firstName}`}
+        title={`${greeting}, ${firstName}`}
         subtitle={formatLongDate(selectedDate)}
         actions={
           <>
@@ -158,6 +210,8 @@ export default function DashboardPage() {
         </div>
       ) : null}
 
+      <DailyCompletionBanner visible={!loading && summary.totalReadings >= 4} />
+
       {/* ---------- Daily summary ---------- */}
       <section aria-label="Daily summary" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
@@ -195,8 +249,8 @@ export default function DashboardPage() {
       </section>
 
       {/* ---------- Day detail + month summary ---------- */}
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <section className="card lg:col-span-2" aria-label="Daily report">
+      <div className="mt-6 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
+        <section className="card flex flex-col lg:col-span-2" aria-label="Daily report">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <div>
               <h2 className="text-sm font-semibold text-slate-900">Daily report</h2>
@@ -251,8 +305,8 @@ export default function DashboardPage() {
           ) : (
             <EmptyState
               icon={ClipboardList}
-              title="No readings for this day"
-              description="Record your morning, after-meal or post-dinner reading to see the daily report."
+              title="A fresh day to track"
+              description="Add your morning reading to get started — the rest of the day will fill in from here."
               action={
                 <button type="button" className="btn-primary" onClick={openAdd}>
                   <Plus className="h-4 w-4" aria-hidden="true" />
@@ -263,11 +317,25 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <section className="card p-5" aria-label="Month to date summary">
+        <section className="card flex flex-col p-5" aria-label="Month to date summary">
           <h2 className="text-sm font-semibold text-slate-900">This month so far</h2>
           <p className="mt-0.5 text-xs text-slate-500">
             {monthToDate?.period?.label || 'From the 1st of this month'}
           </p>
+
+          {inRangePct !== null ? (
+            <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50/70 px-3 py-2">
+              <span className="text-lg font-bold tabular-nums text-emerald-700">{inRangePct}%</span>
+              <span className="text-xs leading-snug text-emerald-700/80">
+                of readings in the 70–180 mg/dL target range
+              </span>
+            </div>
+          ) : null}
+
+          <div className="mt-3">
+            <p className="mb-1 text-xs font-medium text-slate-400">Last 7 days</p>
+            <WeekSparkline points={weekPoints} />
+          </div>
 
           <dl className="mt-4 space-y-3.5">
             {[
@@ -293,13 +361,15 @@ export default function DashboardPage() {
             </div>
           </dl>
 
-          <Link
-            to="/reports"
-            className="mt-5 flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 px-4 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100"
-          >
+          <div className="mt-auto pt-5">
+            <Link
+              to="/reports"
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 px-4 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100"
+            >
             View full reports
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
+            </Link>
+          </div>
         </section>
       </div>
 
@@ -319,8 +389,8 @@ export default function DashboardPage() {
           readings={recent}
           onEdit={openEdit}
           onDelete={setPendingDelete}
-          emptyTitle="No readings yet"
-          emptyDescription="Add your first glucose reading to see it here."
+          emptyTitle="Nothing here yet"
+          emptyDescription="Your first reading is one tap away — it only takes a few seconds."
           emptyAction={
             <button type="button" className="btn-primary" onClick={openAdd}>
               <Plus className="h-4 w-4" aria-hidden="true" />

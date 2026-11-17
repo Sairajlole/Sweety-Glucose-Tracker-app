@@ -6,6 +6,7 @@ export default {
       fontFamily: {
         sans: [
           'Inter',
+          'InterVariable',
           'Segoe UI',
           'system-ui',
           '-apple-system',
@@ -30,7 +31,7 @@ export default {
         },
       },
       boxShadow: {
-        card: '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06)',
+        card: '0 1px 2px 0 rgb(15 23 42 / 0.05), 0 6px 20px -8px rgb(13 148 136 / 0.10)',
         'card-hover': '0 4px 12px -2px rgb(15 23 42 / 0.10), 0 2px 6px -2px rgb(15 23 42 / 0.06)',
       },
       borderRadius: {

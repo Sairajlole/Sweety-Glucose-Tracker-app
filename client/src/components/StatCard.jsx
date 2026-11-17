@@ -26,12 +26,12 @@ export default function StatCard({
     value !== null && value !== undefined && value !== '' && value !== '-';
 
   return (
-    <div className="card p-5">
+    <div className="card p-5 transition-shadow duration-200 hover:shadow-card-hover">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold tracking-tight text-slate-900">
+          <p className="text-[13px] font-medium tracking-wide text-slate-500">{label}</p>
+          <p className="stat-value mt-1.5 flex items-baseline gap-1.5">
+            <span className="text-[26px] font-bold leading-none tracking-tight text-slate-900">
               {loading ? <span className="text-slate-300">---</span> : hasValue ? value : '-'}
             </span>
             {hasValue && unit && !loading ? (
@@ -41,11 +41,11 @@ export default function StatCard({
         </div>
         {Icon ? (
           <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${TONES[tone] || TONES.brand}`}>
-            <Icon className="h-5 w-5" aria-hidden="true" />
+            <Icon className="h-5 w-5" strokeWidth={1.9} aria-hidden="true" />
           </span>
         ) : null}
       </div>
-      {hint ? <p className="mt-3 text-xs text-slate-400">{hint}</p> : null}
+      {hint ? <p className="mt-2.5 text-xs leading-relaxed text-slate-400">{hint}</p> : null}
     </div>
   );
 }
