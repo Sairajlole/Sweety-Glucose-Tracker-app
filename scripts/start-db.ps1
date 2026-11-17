@@ -5,12 +5,15 @@
 .DESCRIPTION
     Sweety was developed against a portable PostgreSQL 16 build that runs
     without administrator rights and without installing a Windows service.
-    This script starts that instance and reports whether it is accepting
-    connections.
+    This script starts that instance and waits until it accepts connections.
 
     If you installed PostgreSQL normally (as a Windows service), you do not
     need this script - the service starts itself. Point DATABASE_URL at your
     own instance instead.
+
+    Note: on a machine with limited free memory, PostgreSQL can take 30-60
+    seconds to finish crash recovery and start accepting connections. This
+    script waits up to 60 seconds rather than failing early.
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File scripts\start-db.ps1
@@ -21,12 +24,14 @@
 param(
     [string]$PgRoot = "C:\Users\hp\pgsql",
     [string]$DataDir = "C:\Users\hp\pgsql-data",
-    [int]$Port = 55432
+    [int]$Port = 55432,
+    [int]$TimeoutSeconds = 60
 )
 
 $ErrorActionPreference = 'Stop'
 
 $pgCtl = Join-Path $PgRoot 'bin\pg_ctl.exe'
+$pgIsReady = Join-Path $PgRoot 'bin\pg_isready.exe'
 $psql = Join-Path $PgRoot 'bin\psql.exe'
 
 if (-not (Test-Path $pgCtl)) {
@@ -39,18 +44,38 @@ if (-not (Test-Path (Join-Path $DataDir 'PG_VERSION'))) {
     exit 1
 }
 
-$listening = netstat -ano | Select-String ":$Port\s+.*LISTENING"
-
-if ($listening) {
+$probe = & $pgIsReady -h 127.0.0.1 -p $Port 2>&1
+if ($probe -match 'accepting connections') {
     Write-Host "PostgreSQL is already running on port $Port." -ForegroundColor Green
 } else {
     Write-Host "Starting PostgreSQL from $DataDir ..."
-    & $pgCtl -D $DataDir -l (Join-Path $DataDir 'server.log') -w start | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "pg_ctl failed to start the cluster. Check $DataDir\server.log"
+
+    # pg_ctl is launched detached with its output redirected to files. Running
+    # it through a pipeline makes this script hang, because the postmaster
+    # inherits the console handle and keeps the pipe open after pg_ctl exits.
+    $ctlOut = Join-Path $DataDir 'pg_ctl.out'
+    Start-Process -FilePath $pgCtl `
+        -ArgumentList @('-D', $DataDir, '-l', (Join-Path $DataDir 'server.log'), '-w', 'start') `
+        -RedirectStandardOutput $ctlOut `
+        -RedirectStandardError "$ctlOut.err" `
+        -WindowStyle Hidden | Out-Null
+
+    $ready = $false
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    while ((Get-Date) -lt $deadline) {
+        Start-Sleep -Seconds 2
+        $probe = & $pgIsReady -h 127.0.0.1 -p $Port 2>&1
+        if ($probe -match 'accepting connections') {
+            $ready = $true
+            break
+        }
+    }
+
+    if (-not $ready) {
+        Write-Error "PostgreSQL did not accept connections within $TimeoutSeconds seconds. Check $DataDir\server.log"
         exit 1
     }
-    Start-Sleep -Seconds 1
+
     Write-Host "PostgreSQL started on port $Port." -ForegroundColor Green
 }
 
@@ -59,8 +84,6 @@ $databases = & $psql -h 127.0.0.1 -p $Port -U postgres -tAc "SELECT datname FROM
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "Databases: $($databases -join ', ')"
-
-    $hasDb = netstat -ano | Select-String ":$Port\s+.*LISTENING"
     if (-not ($databases -match 'sweety_db')) {
         Write-Host "sweety_db is missing. Create it with:" -ForegroundColor Yellow
         Write-Host "  createdb -h 127.0.0.1 -p $Port -U postgres sweety_db"
