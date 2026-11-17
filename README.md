@@ -370,6 +370,9 @@ npm run seed
 Creates the demo account and 80 readings across the last 24 days, with realistic per-slot ranges
 (morning fasting lowest, post-meal higher) and a few deliberately missed days.
 
+Demo readings are generated relative to the day you run the seed, so re-run
+`npm run seed` before a demo or screenshots to make sure "today" is populated.
+
 The script is safe to run repeatedly: the user is upserted on email and readings are inserted
 with `ON CONFLICT (user_id, reading_date, time_slot) DO NOTHING`. Verified in this build - three
 consecutive runs produced 80 readings each time, with 1 user and 0 duplicates.
